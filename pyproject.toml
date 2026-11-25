@@ -16,6 +16,9 @@ dependencies = [
     "scipy>=1.11",
 ]
 
+[project.urls]
+Repository = "https://github.com/cheddarchunk/WCKDSMAT"
+
 [project.scripts]
 wckdsmat = "wckdsmat.cli:main"
 

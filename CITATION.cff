@@ -4,6 +4,7 @@ title: "WCKDSMAT: webcam-based facial kinematics for speech and oral-motor resea
 type: software
 version: 0.1.0.dev0
 license: AGPL-3.0-or-later
+repository-code: "https://github.com/cheddarchunk/WCKDSMAT"
 authors:
   - family-names: Sanchez
     given-names: Victoria E.

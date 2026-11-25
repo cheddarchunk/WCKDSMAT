@@ -9,6 +9,7 @@ ID_PATTERNS = [
     re.compile(r"POLO[-_]?\d{3}"),       # POLO participant IDs
     re.compile(r"/Volumes/"),            # external study drives
     re.compile(r"/Users/[^/\s]+/"),      # personal absolute paths
+    re.compile(r"_[a-z]{2,4}_(0[1-9]|1[0-2])([0-2][0-9]|3[01])[0-9]{2}_"),  # recording names: task_subject_MMDDYY_
 ]
 
 
