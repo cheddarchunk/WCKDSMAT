@@ -19,7 +19,7 @@ dependencies = [
 wckdsmat = "wckdsmat.cli:main"
 
 [project.optional-dependencies]
-video = ["opencv-python", "mediapipe", "imageio", "tqdm"]   # extract + calibrate
+video = ["mediapipe==0.10.21"]   # extract; the validated MediaPipe version (brings OpenCV, needs numpy<2)
 validate = ["matplotlib>=3.8", "seaborn>=0.13"]
 viewer = ["dash", "flask", "plotly", "librosa", "matplotlib>=3.8"]
 dev = ["pytest", "ruff"]

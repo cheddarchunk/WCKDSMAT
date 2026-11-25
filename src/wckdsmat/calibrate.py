@@ -63,6 +63,11 @@ def read_raw_point(df: pd.DataFrame, name: str, index: int) -> np.ndarray | None
     for pattern in ("{n}_px_{a}", "{n}_{a}", "lmk_{i}_{a}"):
         cols = [lower.get(pattern.format(n=name, i=index, a=a).lower()) for a in AXES]
         if all(cols):
+            if pattern.startswith("lmk") and "mirror_indices_swapped" in df.columns \
+                    and bool(pd.to_numeric(df["mirror_indices_swapped"]).fillna(0).any()):
+                raise ValueError("this all-landmarks file came from mirror_method = 'flip_coordinates', so its "
+                                 "indices sit on the opposite side of the face; calibrate the named "
+                                 "(*_gfm_sp_t.csv) file instead, or re-extract with mirror_method = 'flip_frame'")
             return df[cols].apply(pd.to_numeric, errors="coerce").to_numpy(float)
     return None
 

@@ -112,6 +112,25 @@ def _run_each(paths, label, fn) -> int:
     return 1 if failed else 0
 
 
+def _extract(args) -> int:
+    from .extract import extract_video, find_videos
+    try:
+        overrides = {"extract": {"mirror": True}} if args.mirror else None
+        if args.no_video:
+            overrides = {"extract": {**(overrides or {}).get("extract", {}), "write_overlay_video": False}}
+        cfg = load_config(args.config, overrides=overrides)
+    except ConfigError as e:
+        print(e, file=sys.stderr)
+        return 1
+
+    def one(path):
+        rep = extract_video(path, args.out_dir, cfg)
+        missing = f", {rep.frames_without_face} frames without a face" if rep.frames_without_face else ""
+        return f"{rep.n_frames} frames at {rep.fps:.2f} fps, {rep.width}x{rep.height}{missing}"
+
+    return _run_each(find_videos(args.inputs), f"extract -> {args.out_dir}", one)
+
+
 def _calibrate(args) -> int:
     import pandas as pd
 
@@ -163,6 +182,14 @@ def _kinematics(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wckdsmat")
     sub = ap.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("extract", help="MediaPipe Face Mesh landmarks from videos (pixels)")
+    p.add_argument("inputs", nargs="+", help="video files, glob patterns or folders")
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--config", help="config TOML (default: speech preset)")
+    p.add_argument("--mirror", action="store_true", help="recordings are mirrored (selfie view)")
+    p.add_argument("--no-video", action="store_true", help="skip the overlay video")
+    p.set_defaults(func=_extract)
 
     p = sub.add_parser("calibrate", help="convert extracted landmarks to mm (or face units)")
     p.add_argument("inputs", nargs="+", help="CSV files or glob patterns (*_gfm_sp_t.csv or *_gfm_all_t.csv)")

@@ -4,7 +4,7 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 
 | Package file | Copied from | Source md5 | Source modified |
 |---|---|---|---|
-| `src/wckdsmat/extract.py` | `pipeline/gfm_vesbatch_lm_sp.py` | `0e3d3cc54d` | 2026-03-28 |
+| `src/wckdsmat/extract.py` | **rewritten** (2026-11-25) from `pipeline/gfm_vesbatch_lm_sp.py` | `0e3d3cc54d` | 2026-03-28 |
 | `src/wckdsmat/calibrate.py` | **rewritten** (2026-11-25), Method G from `pipeline/gfm_cal_final_ves.py` (same code as `POLO_R/polor_gfm_cal_final_ves.py`) | `6bcee2df8b` | 2025-12-19 |
 | `src/wckdsmat/preprocess.py` | **rewritten** (2026-11-25) from `POLO_R/polor_batch_lp_hn_ves_preserve_head.py` + `pipeline/validation/ds_batch_lp_hn_ves_021726.py`; initial copy was `pipeline/ves_gfm_lp_hn_om.py` | `624bcfcddb` | 2026-04-30 |
 | ~~`src/wckdsmat/kinematics_imll.py`~~ (removed; replaced by `kinematics.py`) | `WCKDSMAT/batch_gfm_imll_timeseries_case_insensitive.py` | `c0014e9fd1` | 2026-06-30 |
@@ -71,3 +71,11 @@ extract → calibrate → preprocess (head-normalize, then low-pass the full-len
 - **Scale jitter enters the un-normalized head trajectories.** Positions are scaled about the image origin, so changes in s(t) move every point by roughly ds x (distance from the image corner). Head normalization cancels this for articulators, but the preserved `*_lp` head points keep it. On 9 POLO files, median head-centroid speed was 3.1-4.5x what a constant scale gives; 0.2 s smoothing reduces this to 1.8-2.4x. Head-movement results from the old pipeline (preserve_head + head centroid) are affected.
 - **Fixed: `scale_center = "head_centroid"`** (the speech default). The face shape is scaled per frame about the anchors' centroid, and the centroid's own motion is converted with the median scale. On the same 9 files, head speed went from 3.0-4.3x to 0.96-1.02x of the constant-scale value. `IMLL_hn` displacement was identical (about 1e-14), and `image_origin` still matches the old outputs (about 1e-15). `interspeech2026` keeps `image_origin`, as published.
 - **POLO head-movement analyses need re-running** with the new calibration.
+
+## Extraction rewrite (2026-11-25)
+
+- **Config-driven.** Named landmarks and their indices come from the config (subject-perspective labels), and iris points are available with `include_iris`. Frames with no detected face become NaN rows with `face_detected = 0` instead of being dropped. `timestamps = "nominal"` (frame/fps, as before) or `"container"` (for variable-frame-rate video). Requires MediaPipe 0.10.21, the validated version, which pins numpy < 2.
+- **Your recordings.** 8 videos checked from `flats/webcam_video`, `flats/15fps` and `POLO_R/videos/adult`: all have a constant frame rate (container = nominal to 0.0 ms), and the old outputs dropped no frames.
+- **The old validation outputs used `--mirror-mode`**, which detects on the mirrored frame and then flips x. MediaPipe's indices then sit on the opposite side of the face. The old speech file swapped the pair names, but the eye pair was already mislabeled, so in that file the subject's right eye was called `LCE`. The old all-landmarks file kept the opposite-side indices.
+- **Two mirror methods.** `flip_frame` (new default) flips before detection, so indices are anatomically correct in both files. `flip_coordinates` is the published method; it relabels the named file through `mirror_pairs`, and flags the all-landmarks file so calibrate refuses to read lateral points from it by index. On a real 30 fps validation video the two methods recovered all 14 known left-right pairs but differ by 1.1-1.7 mm SD per landmark, because MediaPipe is not exactly symmetric. Which is closer to motion capture is an open validation question.
+- **Regression check** (`interspeech2026` settings vs old outputs, 2 videos at 30 fps + 1 at 15 fps from `flats`): all-landmarks and named files match to 3e-5 px, with the eye labels corrected.

@@ -37,7 +37,8 @@ NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 _SCHEMA: dict[str, set[str]] = {
     "meta": {"name", "description", "side_convention"},
     "extract": {"refine_landmarks", "include_iris", "min_detection_confidence",
-                "min_tracking_confidence", "mirror", "save_all_landmarks", "write_overlay_video"},
+                "min_tracking_confidence", "mirror", "mirror_method", "save_all_landmarks",
+                "write_overlay_video", "timestamps"},
     "calibrate": {"eye_pair", "eye_distance_mm", "xy_units", "pixel_aspect", "scale_mode", "z_scale", "scale_center",
                   "scale_smooth_window_s", "scale_clip", "anchors", "z_zero_mode", "z_direction"},
     "preprocess": {"order", "anchors", "anchor_mode", "min_anchors", "ref_frame", "ref_search_s",
@@ -272,8 +273,12 @@ def _build(raw: dict, source: str) -> Config:
         v = extract.get(k)
         if v is not None and not (isinstance(v, (int, float)) and 0 < v <= 1):
             problems.append(f"[extract] {k} = {v!r}: must be in (0, 1]")
-    if extract.get("mirror") and not mirror_pairs:
-        problems.append("[extract] mirror = true needs groups.mirror_pairs")
+    choice("extract", "timestamps", ("nominal", "container"))
+    choice("extract", "mirror_method", ("flip_frame", "flip_coordinates"))
+    if extract.get("mirror") and extract.get("mirror_method") == "flip_coordinates" and not mirror_pairs:
+        problems.append("[extract] mirror_method = 'flip_coordinates' needs groups.mirror_pairs")
+    if extract.get("include_iris") and extract.get("refine_landmarks") is False:
+        problems.append("[extract] include_iris = true needs refine_landmarks = true")
 
     # calibrate
     cal = raw.get("calibrate", {})

@@ -8,7 +8,7 @@ Webcam-based facial kinematics for speech and oral-motor research.
 
 | Stage | Module | Input → Output |
 |---|---|---|
-| 1. Landmark extraction | `wckdsmat.extract` | video → MediaPipe Face Mesh landmarks (pixels) |
+| 1. Landmark extraction | `wckdsmat extract` | video → MediaPipe Face Mesh landmarks (pixels); needs `pip install wckdsmat[video]` |
 | 2. Calibration (Method G) | `wckdsmat calibrate` | pixels → mm (or face units) |
 | 3. Preprocessing | `wckdsmat preprocess` | head normalization, then low-pass; derived points |
 | 4. Task segmentation | segment table CSV | analysis windows (`recording,segment_id,task,start_s,end_s`) |

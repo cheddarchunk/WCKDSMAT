@@ -9,6 +9,10 @@ preset = "speech"
 name = "interspeech2026"
 description = "Settings used for the Interspeech 2026 MediaPipe-vs-motion-capture validation"
 
+[extract]
+mirror = true                  # the validation recordings were processed as mirrored
+mirror_method = "flip_coordinates"   # published: flip x after detection
+
 [calibrate]
 scale_mode = "eye_2d"          # eq. 3: image-plane outer-canthal distance
 z_scale = "global_median"      # s_z = median_t s(t)

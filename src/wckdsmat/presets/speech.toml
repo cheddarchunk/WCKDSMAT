@@ -64,7 +64,10 @@ refine_landmarks = true
 include_iris = false
 min_detection_confidence = 0.5
 min_tracking_confidence = 0.5
-mirror = false                # set true for mirrored recordings; swaps mirror_pairs
+mirror = false                # true for mirrored (selfie) recordings
+mirror_method = "flip_frame"  # flip_frame: flip before detection (correct indices everywhere) | flip_coordinates:
+                              #   published; flip x after detection, named file relabeled via mirror_pairs
+timestamps = "nominal"        # nominal: frame / fps | container: the video's own timestamps (variable frame rate)
 save_all_landmarks = true     # keep all points so new landmark sets need no re-extraction
 write_overlay_video = true
 
