@@ -25,7 +25,7 @@ Order is fixed (Interspeech 2026, sections 3.2-3.6):
 5. `kinematics` — per-segment displacement (from segment onset), velocity, acceleration; derivatives never cross a recording gap
 6. `validate` — motion capture (CTX) vs webcam: cut with CTX offset → resample CTX to webcam frames → one rigid fit on the head anchors → traces → metrics → ROM95/Speed95 normalization → summary. Must keep reproducing 2.030 ± 0.589 mm with `interspeech2026` (see docs/PROVENANCE.md).
 
-`viewer/` is the QC and segmentation reviewer. It is **not yet part of the package**: it moves into `src/` only once it is functional and finished.
+`wckdsmat.viewer` is the **Speech Movement Data Viewer** (`wckdsmat view`). Keep web code in `app.py` and `assets/`; loading, spectrograms, annotations and export (`data.py`, `annotations.py`, `export.py`) stay free of Dash and are unit-tested. Its segment table must stay in the package format.
 
 ## Definition of done for any change
 - `pytest` passes, and runs in seconds on the synthetic fixture.

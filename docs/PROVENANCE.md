@@ -13,8 +13,8 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 | ~~`src/wckdsmat/validate/traces.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/validation_pipeline_STEP1.py` | `b59800091e` | 2026-02-18 |
 | ~~`src/wckdsmat/validate/bandini.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/bandini_full_pipeline_STEP2.py` | `1e2d34bb38` | 2026-02-18 |
 | ~~`src/wckdsmat/validate/stage_b.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/batch_stage_b_pipeline_STEP3.py` | `a6ba09f538` | 2026-02-18 |
-| `viewer/reviewer.py` | `WCKDSMAT/wckdsmat_batch_reviewer.py` | `28d1b49cd4` | 2026-07-01 |
-| `viewer/qc_displacement.py` | `WCKDSMAT/qc_lip_jaw_displacement_viewer_for_batch_outputs.py` | `a1f36a83b2` | 2026-07-01 |
+| ~~`viewer/reviewer.py`~~ (removed; rebuilt as `src/wckdsmat/viewer/`) | `WCKDSMAT/wckdsmat_batch_reviewer.py` | `28d1b49cd4` | 2026-07-01 |
+| ~~`viewer/qc_displacement.py`~~ (removed) | `WCKDSMAT/qc_lip_jaw_displacement_viewer_for_batch_outputs.py` | `a1f36a83b2` | 2026-07-01 |
 | ~~`src/wckdsmat/validate/spatial_alignment.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/spatial_alignment.py` | `2c748f09a1` | 2026-02-17 |
 | `docs/fix_log.md` | `pipeline/validation/pipeline_fix_log.md` | `0ee191f924` | 2026-02-18 |
 
@@ -96,3 +96,17 @@ extract → calibrate → preprocess (head-normalize, then low-pass the full-len
 - **Straight-line fill in the motion-capture reference.** 151 of 812 speech-landmark traces (19%), in 24 of the 116 segments, are more than 50% exact straight-line samples (runs of 5 or more), which is consistent with linear gap filling of marker dropouts.
   - Every metric row now carries `ref_fill_frac`, and `max_reference_fill` drops such traces from summaries.
   - Excluding traces more than 50% filled gives 1.92 ± 0.74 mm and a velocity peak correlation of 0.66 (published: 2.03 mm, 0.59), so the published accuracy is conservative.
+
+## Speech Movement Data Viewer (2026-11-25)
+
+`src/wckdsmat/viewer/` replaces `viewer/reviewer.py` (formerly `WCKDSMAT/wckdsmat_batch_reviewer.py`, the QC viewer).
+
+- **Kept** from the old viewer: ffmpeg audio extraction, the spectrogram approach, and the browser-side playhead.
+- **New:**
+  - all three axes, any space, and package file formats;
+  - wideband/narrowband spectrogram recomputed for the visible window;
+  - flags you can drag, edit and delete, with labeled segments between neighboring flags;
+  - autosave and resume;
+  - segment-table export in the package format, plus segmenting the file on the spot.
+- **Timing:** `wckdsmat extract` stamps frame k at k/fps (1-based), so movement trails the video's audio by one frame. The viewer shifts audio by one frame automatically (`--audio-offset auto`).
+- **Tested** in the browser on a lab-adult validation recording: playback and playhead position (exact to the frame), flag by button, key and click, dragging, segment labeling, saving, segmenting, resume, deleting, and narrowband zoom.

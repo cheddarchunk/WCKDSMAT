@@ -202,6 +202,25 @@ def _validate(args) -> int:
     return 0
 
 
+def _view(args) -> int:
+    try:
+        from .viewer.app import Session, create_app
+    except ImportError as e:
+        print(f"the viewer needs the viewer extra: pip install 'wckdsmat[viewer]' ({e})", file=sys.stderr)
+        return 1
+    try:
+        cfg = load_config(args.config)
+        session = Session(args.recording, cfg, audio=args.audio, video=args.video, out_dir=args.out_dir,
+                          segments_table=args.segments_table, audio_offset=args.audio_offset)
+    except (ConfigError, ValueError, RuntimeError, OSError) as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"Speech Movement Data Viewer: {session.rec.name}  ->  http://127.0.0.1:{args.port}")
+    print(f"  annotations: {session.ann_path}")
+    create_app(session).run(host="127.0.0.1", port=args.port, debug=False)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wckdsmat")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -224,6 +243,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-face-units", action="store_true", help="with --eye-table: face units for unlisted files")
     p.add_argument("--video-size", help="WxH, only for xy_units = normalized01")
     p.set_defaults(func=_calibrate)
+
+    p = sub.add_parser("view", help="Speech Movement Data Viewer: movement + spectrogram, flags and segments")
+    p.add_argument("recording", help="a recording CSV from any stage (preprocess output recommended)")
+    media = p.add_mutually_exclusive_group()
+    media.add_argument("--video", help="source video; its audio track is extracted with ffmpeg")
+    media.add_argument("--audio", help="WAV file on the same clock as the video")
+    p.add_argument("--out-dir", help="where annotations, segment tables and cut files go "
+                                     "(default: annotations/ next to the recording)")
+    p.add_argument("--segments-table", help="project-wide segment table to update when saving")
+    p.add_argument("--audio-offset", default="auto",
+                   help="seconds added to audio time; 'auto' = one frame for extract's 1-based time stamps")
+    p.add_argument("--config", help="config TOML (default: speech preset)")
+    p.add_argument("--port", type=int, default=8050)
+    p.set_defaults(func=_view)
 
     p = sub.add_parser("validate", help="agreement with motion capture, per segment and summarized")
     p.add_argument("--segments", required=True,

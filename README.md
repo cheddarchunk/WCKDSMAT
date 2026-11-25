@@ -14,13 +14,27 @@ Webcam-based facial kinematics for speech and oral-motor research.
 | 4. Task segmentation | segment table CSV | analysis windows (`recording,segment_id,task,start_s,end_s`) |
 | 5. Kinematics | `wckdsmat kinematics` | per-segment displacement, velocity, acceleration |
 | 6. Validation | `wckdsmat validate` | agreement with motion capture (CTX): uRMSE, normalized error, cross-correlation, spectra |
-| QC viewer | `viewer/` (in progress) | interactive review and segmentation |
 
 ## Install (development)
 
 ```bash
 pip install -e ".[all,dev]"
 ```
+
+## Speech Movement Data Viewer
+
+```bash
+pip install -e ".[viewer]"        # needs ffmpeg on PATH to read audio from video
+wckdsmat view RECORDING_lp_hn.csv --video RECORDING.mov --segments-table segments.csv
+```
+
+- **Movement:** X, Y and Z of the selected landmarks in stacked panels, in any space (head-normalized, un-normalized head movement, calibrated, pixels), optionally centered.
+- **Acoustics:** a wideband (5 ms, about 300 Hz) or narrowband (30 ms, about 45 Hz) spectrogram on the same time axis, recomputed for the visible window.
+- **Playback:** a smooth playhead across all panels. Click to seek, *Play view* plays the visible window, **Space** plays or pauses, and **←/→** step 0.1 s. Audio is aligned one frame earlier automatically for `wckdsmat extract` time stamps (`--audio-offset`).
+- **Event flags:** **F** or *Flag at playhead*, or click in "add flag" mode. Drag flags on the plot, and edit or delete them in the table.
+- **Segments:** label (and task) any interval between neighboring flags in the segments table.
+- **Saving:** annotations autosave and reload next time. *Save segment table* writes `RECORDING_segments.csv` and `RECORDING_events.csv`, and can update a project-wide table. These are the format `wckdsmat kinematics` and `wckdsmat validate` read.
+- **Segment this file now:** writes one file per segment plus per-segment kinematics, without waiting for a batch run.
 
 ## Configuration
 

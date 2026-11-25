@@ -1,0 +1,26 @@
+:root { --ink: #1d2733; --muted: #66717d; --line: #e3e7ec; --accent: #1f6fb2; --flag: #c0392b; }
+body { margin: 0; background: #f7f8fa; color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.smv { max-width: 1600px; margin: 0 auto; padding: 14px 20px 40px; }
+header h1 { font-size: 20px; margin: 0 0 2px; font-weight: 650; }
+header .sub { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; background: white;
+       border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ctl .lbl { color: var(--muted); font-weight: 600; }
+.ctl label, .row > div label { margin-right: 10px; font-size: 13px; }
+.transport audio { height: 34px; }
+.btn { border: 1px solid #c9d1da; background: white; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.btn:hover { background: #f0f4f8; }
+.btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn.primary:hover { background: #185a92; }
+input { border: 1px solid #c9d1da; border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+.row .dash-input-container { flex: 0 1 240px; width: 240px; }   /* Dash 4 wraps inputs in a full-width div */
+.row .dash-input-container input { width: 100%; box-sizing: border-box; }
+#graph-wrap { position: relative; background: white; border: 1px solid var(--line); border-radius: 8px; }
+#playhead { position: absolute; width: 2px; background: #e67e22; pointer-events: none; display: none; z-index: 5; }
+.tables { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.6fr); gap: 14px; margin: 10px 0; }
+.tables > div { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.tables h3 { font-size: 15px; margin: 2px 0 4px; }
+.hint { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+.status { font-size: 13px; padding: 6px 2px; color: #1e6b3a; min-height: 18px; }
+@media (max-width: 900px) { .tables { grid-template-columns: 1fr; } }
