@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Agreement metrics between a test system (webcam, A) and the reference (motion capture, B).
 
 Ported from the research scripts ``bandini_full_pipeline_STEP2.py`` and

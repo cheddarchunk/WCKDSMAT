@@ -54,4 +54,12 @@ See [docs/fix_log.md](docs/fix_log.md). In short: 3D traces are excursion, error
 
 ## Citation
 
-TODO
+If you use WCKDSMAT, please cite:
+
+> Sanchez, V. E., Roesler, O., Neumann, M., Pautler, D., Richburg, B., Chenausky, K. V., Yunusova, Y., Ramanarayanan, V., & Green, J. (2026). From Lab to Laptop: Validating 3D Speech Kinematics with MediaPipe Face Mesh. *Proceedings of Interspeech 2026*.
+
+Machine-readable metadata is in [CITATION.cff](CITATION.cff).
+
+## License
+
+WCKDSMAT is free software under the [GNU Affero General Public License v3.0 or later](LICENSE) (`AGPL-3.0-or-later`). You may use, study, modify and share it. If you distribute a modified version, **or run one as a network service** (for example a hosted analysis platform or the viewer), you must make its source available under the same license, so improvements stay open.

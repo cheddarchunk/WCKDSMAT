@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Stage 3: head normalization (rigid Kabsch) and zero-phase low-pass filtering.
 
 Reads a calibrated landmark CSV and writes, for every configured point:

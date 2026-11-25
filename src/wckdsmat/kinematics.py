@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Stage 4: per-segment kinematics from preprocessed trajectories.
 
 For each task segment (see :mod:`wckdsmat.segments`), and for every point in

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 WCKDSMAT contributors
 // Speech Movement Data Viewer: smooth playhead across all panels + keyboard shortcuts.
 (function () {
   function offset() {

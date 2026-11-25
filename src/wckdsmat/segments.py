@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Task-segment tables and per-recording lookup tables.
 
 A task segment is an analysis window (a DDK trial, a sentence, a BAA block).

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Single source of truth for pipeline settings.
 
 A config is a TOML file layered over a preset (``speech`` by default)::

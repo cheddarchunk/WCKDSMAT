@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Speech Movement Data Viewer (Dash app).
 
 Movement (X, Y, Z of each selected landmark) and a wide- or narrowband
@@ -17,6 +19,7 @@ from flask import send_file
 from plotly.colors import qualitative
 from plotly.subplots import make_subplots
 
+from .. import SOURCE_URL
 from ..config import Config
 from .annotations import Annotations, upsert_segment_table
 from .data import SPACE_LABELS, auto_audio_offset, extract_audio, load_recording, load_wav, spectrogram_window
@@ -201,6 +204,8 @@ def create_app(s: Session) -> Dash:
             html.Span(f"annotations autosave to {s.ann_path}", className="hint"),
         ]),
         html.Div(id="status", className="status"),
+        html.Footer(["WCKDSMAT is free software under the GNU AGPL v3.0 or later. Source code: ",
+                     html.A(SOURCE_URL, href=SOURCE_URL, target="_blank")], className="hint footer"),
         dcc.Store(id="view"), dcc.Store(id="playhead-t"), dcc.Store(id="ann-version", data=0),
         html.Div(id="audio-offset", children=str(s.audio_offset), style={"display": "none"}),
         html.Div(id="seek-sink", style={"display": "none"}), html.Div(id="play-sink", style={"display": "none"}),

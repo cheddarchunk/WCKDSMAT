@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Stage 2: calibrate Face Mesh coordinates to millimetres (or face units).
 
 Implements the method of Sanchez et al., Interspeech 2026, section 3.3:

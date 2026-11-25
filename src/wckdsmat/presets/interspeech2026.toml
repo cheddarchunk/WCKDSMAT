@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 # WCKDSMAT preset: reproduce Sanchez et al., "From Lab to Laptop: Validating 3D Speech
 # Kinematics with MediaPipe Face Mesh", Interspeech 2026.
 #

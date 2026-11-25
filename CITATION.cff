@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use WCKDSMAT, please cite the validation paper below."
+title: "WCKDSMAT: webcam-based facial kinematics for speech and oral-motor research"
+type: software
+version: 0.1.0.dev0
+license: AGPL-3.0-or-later
+authors:
+  - family-names: Sanchez
+    given-names: Victoria E.
+keywords:
+  - speech kinematics
+  - MediaPipe Face Mesh
+  - motion capture validation
+  - oral motor
+preferred-citation:
+  type: conference-paper
+  title: "From Lab to Laptop: Validating 3D Speech Kinematics with MediaPipe Face Mesh"
+  collection-title: "Proceedings of Interspeech 2026"
+  conference:
+    name: "Interspeech 2026"
+  year: 2026
+  authors:
+    - family-names: Sanchez
+      given-names: Victoria E.
+    - family-names: Roesler
+      given-names: Oliver
+    - family-names: Neumann
+      given-names: Michael
+    - family-names: Pautler
+      given-names: David
+    - family-names: Richburg
+      given-names: Brian
+    - family-names: Chenausky
+      given-names: Karen V.
+    - family-names: Yunusova
+      given-names: Yana
+    - family-names: Ramanarayanan
+      given-names: Vikram
+    - family-names: Green
+      given-names: Jordan

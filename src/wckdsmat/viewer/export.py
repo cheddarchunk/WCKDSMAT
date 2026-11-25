@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Segment one recording from the viewer, without waiting for a batch run."""
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 # WCKDSMAT preset: speech / oral-motor (default)
 #
 # Copy this file to start a project config:   wckdsmat config init my_study.toml

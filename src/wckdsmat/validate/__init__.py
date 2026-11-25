@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Validation against motion capture: pair, align, trace, score, summarize.
 
 See :mod:`wckdsmat.validate.run` for the per-segment flow and

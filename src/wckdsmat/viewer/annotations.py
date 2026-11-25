@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Event flags and labeled segments (no web code).
 
 Flags are time points with an optional label. Every interval between two

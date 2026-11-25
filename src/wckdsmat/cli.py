@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Command-line entry point: ``wckdsmat <command>``.
 
 Stage commands (extract, calibrate, ...) will be added here as each stage is

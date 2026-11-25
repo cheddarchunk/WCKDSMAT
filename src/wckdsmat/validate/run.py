@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Validation run: per-segment agreement metrics and the paper-style summary.
 
 Per segment (see :mod:`wckdsmat.validate.pairing` for cut / resample / align):

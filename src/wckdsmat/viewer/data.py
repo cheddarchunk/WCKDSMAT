@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 WCKDSMAT contributors
 """Data for the Speech Movement Data Viewer: recordings, audio and spectrograms (no web code).
 
 Recordings can be any stage's output: preprocess (``NAME_hn_X``, ``NAME_lp_X``),

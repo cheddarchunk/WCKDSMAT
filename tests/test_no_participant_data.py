@@ -42,3 +42,10 @@ def test_no_identifiers_in_text():
             if any(rx.search(line) for rx in ID_PATTERNS):
                 hits.append(f"{p.relative_to(ROOT)}:{i}")
     assert not hits, f"identifiers or personal paths found: {hits}"
+
+
+def test_every_source_file_has_license_header():
+    missing = [str(p.relative_to(ROOT)) for p in (ROOT / "src").rglob("*")
+               if p.suffix in {".py", ".js", ".css", ".toml"}
+               and "SPDX-License-Identifier: AGPL-3.0-or-later" not in p.read_text()[:300]]
+    assert not missing, f"add the SPDX header to: {missing}"
