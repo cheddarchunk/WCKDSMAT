@@ -34,8 +34,8 @@ import pandas as pd
 # ---------------------------------------------------------------------
 THIS_DIR = Path(__file__).resolve().parent
 SPATIAL_ALIGN = THIS_DIR / "spatial_alignment.py"
-VALIDATION    = THIS_DIR / "validation_pipeline_STEP1.py"
-BANDINI       = THIS_DIR / "bandini_full_pipeline_STEP2.py"
+VALIDATION    = THIS_DIR / "traces.py"
+BANDINI       = THIS_DIR / "bandini.py"
 
 
 # ---------------------------------------------------------------------

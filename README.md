@@ -21,6 +21,16 @@ Webcam-based facial kinematics for speech and oral-motor research.
 pip install -e ".[all,dev]"
 ```
 
+## Configuration
+
+One TOML file controls the whole pipeline: which MediaPipe Face Mesh points to track and what to call them, named groups (head anchors, lips, jaw), derived points (e.g. `IMLL = MLL - mean(LJ, RJ)`), and every stage's settings. The `speech` preset holds the defaults for speech and oral-motor work. Override only what you need:
+
+```bash
+wckdsmat config init my_study.toml      # start from the speech preset
+wckdsmat config check my_study.toml     # report every problem at once
+wckdsmat config show my_study.toml      # print the resolved settings
+```
+
 ## Signal conventions
 
 See [docs/fix_log.md](docs/fix_log.md). In short: 3D traces are excursion, error or speed magnitudes, never `||position||`.

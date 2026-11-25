@@ -5,6 +5,12 @@
 - **Edit files in place. Never create `_v2`, `_FINAL`, `_GOOD`, `_new` or dated copies.** Git holds the history. Work on a branch, commit when a change works, and let the commit message say what changed.
 - No hardcoded absolute paths. Every input and output path comes from CLI arguments or a config file.
 
+## Configuration
+- Every setting a scientist might change (landmark names and MediaPipe indices, groups, filter cutoffs, reference frame, derivative units, ...) lives in the config (`src/wckdsmat/config.py`, presets in `src/wckdsmat/presets/`). **Never hardcode a landmark index, landmark name or tunable in a stage**: read it from `Config`.
+- A new setting needs: a preset default, a schema entry plus a validation rule in `config.py`, and a test in `tests/test_config.py`.
+- Columns follow `<NAME>_<space>_<AXIS>`; build them with `config.column()`.
+- Left/right names are from the subject's point of view.
+
 ## Signal conventions (see docs/fix_log.md, non-negotiable)
 - Never use `||position||` as a "3D trace" (it depends on the origin).
 - Valid 3D scalars: error magnitude `||B - A||`, excursion `||X - ref||` (ref = first frame unless stated), speed `||dX/dt||`.

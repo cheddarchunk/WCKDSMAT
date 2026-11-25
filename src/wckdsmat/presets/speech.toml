@@ -1,0 +1,96 @@
+# WCKDSMAT preset: speech / oral-motor (default)
+#
+# Copy this file to start a project config:   wckdsmat config init my_study.toml
+# Any key you omit falls back to this preset.
+
+[meta]
+name = "speech"
+description = "Lips, jaw and rigid head anchors for speech and oral-motor kinematics"
+# Left/right are named from the SUBJECT's point of view (subject's right = image-left
+# in an unmirrored webcam recording). Applies to every L*/R* name below.
+side_convention = "subject"
+
+# ---------------------------------------------------------------------------
+# Landmarks: NAME = MediaPipe Face Mesh index (0-467; 468-477 are iris points
+# and need extract.include_iris = true). The names become the column stems.
+# ---------------------------------------------------------------------------
+[landmarks]
+NT  = 1     # nose tip
+RCE = 33    # right eye, outer corner   (NOTE: older outputs labeled index 33 "LCE")
+LCE = 263   # left eye, outer corner    (NOTE: older outputs labeled index 263 "RCE")
+RTH = 108   # right forehead (top head)
+RBH = 107   # right brow, inner (bottom head)
+LTH = 336
+LBH = 337
+RCL = 61    # right lip corner
+LCL = 291   # left lip corner
+MUL = 0     # middle upper lip
+MLL = 17    # middle lower lip
+RJ  = 176   # right jaw
+MJ  = 199   # middle jaw / chin
+LJ  = 400   # left jaw
+
+# Named groups that stage settings refer to.
+[groups]
+head_anchors = ["RCE", "LCE", "RTH", "LTH", "RBH", "LBH", "NT"]  # rigid head for Kabsch
+head_motion  = ["LBH", "LTH", "RBH", "RTH"]                       # kept un-normalized for head-movement work
+lips         = ["MUL", "MLL", "RCL", "LCL"]
+jaw          = ["RJ", "MJ", "LJ"]
+
+mirror_pairs = [["RCE", "LCE"], ["RTH", "LTH"], ["RBH", "LBH"], ["RCL", "LCL"], ["RJ", "LJ"]]
+
+# Virtual points built from landmarks after head normalization.
+[[derived]]
+name = "JAW_MID"
+op = "mean"
+of = ["LJ", "RJ"]
+
+[[derived]]
+name = "IMLL"        # independent lower-lip motion
+op = "difference"    # first minus second
+of = ["MLL", "JAW_MID"]
+
+# ---------------------------------------------------------------------------
+# Stage settings
+# ---------------------------------------------------------------------------
+[extract]
+refine_landmarks = true
+include_iris = false
+min_detection_confidence = 0.5
+min_tracking_confidence = 0.5
+mirror = false                # set true for mirrored recordings; swaps mirror_pairs
+save_all_landmarks = true     # keep all points so new landmark sets need no re-extraction
+write_overlay_video = true
+
+[calibrate]
+eye_pair = ["RCE", "LCE"]
+# Physical outer-canthal distance. Leave unset for face-relative units (eye distance = 1).
+# Usually per participant: set it in the recording manifest, not here.
+# eye_distance_mm = 100.0
+xy_units = "normalized01"     # pixels | normalized01 | custom
+anchors = "head_anchors"      # group name or list of landmarks
+z_zero_mode = "anchors_mean"
+z_direction = "decrease_toward_camera"
+
+[preprocess]
+order = "hn_then_lp"          # hn_then_lp | lp_then_hn
+anchors = "head_anchors"
+ref_frame = 0                 # earlier POLO runs used 15
+lowpass_hz = 10.0
+filter_order = 4
+preserve_unnormalized = "head_motion"
+gap_split_factor = 3.0        # split the recording where dt > factor * median dt
+max_interp_gap_frames = 5     # fill dropouts up to this many frames; longer gaps stay NaN
+
+[kinematics]
+derivative = "time"           # time (units/s) | frame (units/frame)
+displacement_ref = "first_valid"
+products = ["position", "displacement", "velocity", "acceleration"]
+# 3D magnitudes allowed: displacement (excursion), velocity (speed), acceleration.
+# "position" is rejected: ||position|| depends on the origin (docs/fix_log.md).
+magnitude_3d = ["displacement", "velocity", "acceleration"]
+
+[validate]
+reference_fs = 30.0
+max_lag_ms = 500.0
+fit = "rigid"

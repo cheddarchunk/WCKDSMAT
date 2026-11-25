@@ -7,13 +7,16 @@ name = "wckdsmat"
 version = "0.1.0.dev0"
 description = "Webcam-based facial kinematics for speech and oral-motor research: landmark extraction, calibration to mm, head normalization, articulator kinematics, and validation against motion capture."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"   # tomllib
 # license = TODO: choose (e.g. MIT, BSD-3-Clause, GPL-3.0) before release
 dependencies = [
     "numpy>=1.26,<2.0",
     "pandas>=2.1",
     "scipy>=1.11",
 ]
+
+[project.scripts]
+wckdsmat = "wckdsmat.cli:main"
 
 [project.optional-dependencies]
 video = ["opencv-python", "mediapipe", "imageio", "tqdm"]   # extract + calibrate

@@ -1,6 +1,6 @@
 # Provenance
 
-Each file was copied from the original research folder `ValidationPipeline_VES/WCKDSMAT/` on 2026-11-25. The only change was replacing study paths and participant IDs in the usage examples with placeholders. The md5 is the hash of the original source file.
+Each file was copied from the original research folder `ValidationPipeline_VES/WCKDSMAT/` on 2026-11-25. The only changes: study paths, participant IDs and initials in the usage examples were replaced with placeholders, and `validate/stage_b.py` now calls `traces.py` / `bandini.py` (the renamed STEP1/STEP2 scripts). The md5 is the hash of the original source file.
 
 | Package file | Copied from | Source md5 | Source modified |
 |---|---|---|---|
@@ -15,6 +15,7 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 | `src/wckdsmat/validate/stage_b.py` | `pipeline/validation/batch_stage_b_pipeline_STEP3.py` | `a6ba09f538` | 2026-02-18 |
 | `viewer/reviewer.py` | `WCKDSMAT/wckdsmat_batch_reviewer.py` | `28d1b49cd4` | 2026-07-01 |
 | `viewer/qc_displacement.py` | `WCKDSMAT/qc_lip_jaw_displacement_viewer_for_batch_outputs.py` | `a1f36a83b2` | 2026-07-01 |
+| `src/wckdsmat/validate/spatial_alignment.py` | `pipeline/validation/spatial_alignment.py` | `2c748f09a1` | 2026-02-17 |
 | `docs/fix_log.md` | `pipeline/validation/pipeline_fix_log.md` | `0ee191f924` | 2026-02-18 |
 
 ## Open decisions (alternatives that were *not* copied)
@@ -28,3 +29,12 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 | validate (Bland–Altman) | not copied yet | `pipeline/residual_error_ba.py`, `validation/ba_plots.py` | — |
 | calibrate batch wrapper | not copied yet | `POLO_R/gfm_cal_batch_ves.py`, `batch_calibrate_faceunits.py` | — |
 | viewer | `wckdsmat_batch_reviewer.py` (newest, 2026-07-01) | ~20 `wckdsmat_*`/`segtool_*`/`ves_seg_*` variants, incl. a Qt version | needs a feature inventory before it counts as finished |
+
+## Known issues found during reconciliation (2026-11-25)
+
+- **Eye labels swapped in `extract.py`.** `speech_landmark_map` names index 33 `LCE` and 263 `RCE`, but 33 is on the same side as 61 (`RCL`), 108 (`RTH`) and 176 (`RJ`). The speech preset uses subject-perspective names (`RCE = 33`). Outputs written by the old map have the eye columns swapped.
+- **`||position||` written by default.** `kinematics_grouped.py` (`position/*_3D`) and `head.py` (`head_centroid_lp_3D`) do this, in violation of docs/fix_log.md. The config rejects `position` in `magnitude_3d`.
+- **Velocity units differ.** `kinematics_grouped` defaults to per-frame and `kinematics_imll` to per-second.
+- **Recording gaps are ignored.** Filtering and derivatives run across cuts in segmented recordings (e.g. jumps of up to ~16 s in 25 fps files).
+- **Iris points are dropped.** `extract.py` runs `refine_landmarks=True` (478 points) but writes only 0-467.
+- **Undefined keys in head pose.** `extract.py` `P2D_KEYS` uses `LMC`/`RMC`, which the landmark map doesn't define.
