@@ -6,7 +6,7 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 |---|---|---|---|
 | `src/wckdsmat/extract.py` | `pipeline/gfm_vesbatch_lm_sp.py` | `0e3d3cc54d` | 2026-03-28 |
 | `src/wckdsmat/calibrate.py` | `pipeline/gfm_cal_final_ves.py` | `6bcee2df8b` | 2025-12-19 |
-| `src/wckdsmat/preprocess.py` | `pipeline/ves_gfm_lp_hn_om.py` | `624bcfcddb` | 2026-04-30 |
+| `src/wckdsmat/preprocess.py` | **rewritten** (2026-11-25) from `POLO_R/polor_batch_lp_hn_ves_preserve_head.py` + `pipeline/validation/ds_batch_lp_hn_ves_021726.py`; initial copy was `pipeline/ves_gfm_lp_hn_om.py` | `624bcfcddb` | 2026-04-30 |
 | `src/wckdsmat/kinematics_imll.py` | `WCKDSMAT/batch_gfm_imll_timeseries_case_insensitive.py` | `c0014e9fd1` | 2026-06-30 |
 | `src/wckdsmat/kinematics_grouped.py` | `POLO_R/batch_gfm_kinematic_timeseries_grouped_v5_3d.py` | `9c51c88a90` | 2026-09-07 |
 | `src/wckdsmat/head.py` | `POLO_R/batch_head_centroid_from_lp.py` | `3fad569135` | 2026-05-20 |
@@ -38,3 +38,17 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 - **Recording gaps are ignored.** Filtering and derivatives run across cuts in segmented recordings (e.g. jumps of up to ~16 s in 25 fps files).
 - **Iris points are dropped.** `extract.py` runs `refine_landmarks=True` (478 points) but writes only 0-467.
 - **Undefined keys in head pose.** `extract.py` `P2D_KEYS` uses `LMC`/`RMC`, which the landmark map doesn't define.
+
+## Preprocess rewrite and regression check (2026-11-25)
+
+`preprocess.py` is now config-driven and combines the following:
+- **From the POLO batch script:** head-normalize then low-pass, preserved un-normalized head trajectories (`*_lp_*`), and interpolation of dropouts.
+- **From the validation dual-stream script** (same `kabsch`, filter and head-normalize code as POLO): fixed or adaptive anchor subsets, `min_anchors`, a reference-frame search window, and the 0.95 x Nyquist cutoff cap.
+- **New:** splitting at recording gaps, a maximum length for gap filling, derived points from the config, `sosfiltfilt`, and a JSON report per file.
+
+Regression check against the POLO script's real output (2 POLO faceunits files, 25 fps, 54 columns, settings matched to the old behavior: ref 15, no search, no gap split, unlimited fill):
+- Median |new - old| was about 3e-15; beyond 30 frames from the file edges the maximum was 1.6e-8.
+- Up to 0.03 face units within 30 frames of the file edges, from `sosfiltfilt` vs `filtfilt` edge padding.
+- Not covered: neither file had tracking dropouts.
+
+With the new defaults, one file split into 12 segments, several only 4-6 frames long. Segments shorter than the filter's padding stay NaN and are counted in `samples_too_short_to_filter`.

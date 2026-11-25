@@ -39,8 +39,9 @@ _SCHEMA: dict[str, set[str]] = {
     "extract": {"refine_landmarks", "include_iris", "min_detection_confidence",
                 "min_tracking_confidence", "mirror", "save_all_landmarks", "write_overlay_video"},
     "calibrate": {"eye_pair", "eye_distance_mm", "xy_units", "anchors", "z_zero_mode", "z_direction"},
-    "preprocess": {"order", "anchors", "ref_frame", "lowpass_hz", "filter_order",
-                   "preserve_unnormalized", "gap_split_factor", "max_interp_gap_frames"},
+    "preprocess": {"order", "anchors", "anchor_mode", "min_anchors", "ref_frame", "ref_search_s",
+                   "lowpass_hz", "nyquist_cap", "filter_order", "preserve_unnormalized",
+                   "gap_split_factor", "max_interp_gap_frames"},
     "kinematics": {"derivative", "displacement_ref", "products", "magnitude_3d"},
     "validate": {"reference_fs", "max_lag_ms", "fit"},
 }
@@ -278,6 +279,14 @@ def _build(raw: dict, source: str) -> Config:
     positive("preprocess", "lowpass_hz")
     positive("preprocess", "filter_order", integer=True)
     positive("preprocess", "max_interp_gap_frames", integer=True, allow_zero=True)
+    choice("preprocess", "anchor_mode", ("fixed", "adaptive"))
+    positive("preprocess", "ref_search_s", allow_zero=True)
+    ma = pre.get("min_anchors")
+    if ma is not None and not (isinstance(ma, int) and not isinstance(ma, bool) and ma >= 3):
+        problems.append(f"[preprocess] min_anchors = {ma!r}: must be an integer >= 3 (rigid fit)")
+    cap = pre.get("nyquist_cap")
+    if cap is not None and not (isinstance(cap, (int, float)) and 0 < cap < 1):
+        problems.append(f"[preprocess] nyquist_cap = {cap!r}: must be between 0 and 1 (omit it to raise an error instead)")
     gsf = pre.get("gap_split_factor")
     if gsf is not None and not (isinstance(gsf, (int, float)) and gsf > 1):
         problems.append(f"[preprocess] gap_split_factor = {gsf!r}: must be > 1")

@@ -75,8 +75,12 @@ z_direction = "decrease_toward_camera"
 [preprocess]
 order = "hn_then_lp"          # hn_then_lp | lp_then_hn
 anchors = "head_anchors"
+anchor_mode = "fixed"         # fixed: anchors tracked at the reference, every frame | adaptive: any tracked per frame
+min_anchors = 3               # a rigid fit needs at least 3
 ref_frame = 0                 # earlier POLO runs used 15
+ref_search_s = 2.0            # look +/- this long around ref_frame for the frame with the most tracked anchors
 lowpass_hz = 10.0
+nyquist_cap = 0.95            # clamp the cutoff to 0.95 x Nyquist (e.g. 7.1 Hz at 15 fps); remove to raise an error instead
 filter_order = 4
 preserve_unnormalized = "head_motion"
 gap_split_factor = 3.0        # split the recording where dt > factor * median dt
