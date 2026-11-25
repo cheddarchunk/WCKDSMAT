@@ -50,6 +50,12 @@ name = "IMLL"        # independent lower-lip motion
 op = "difference"    # first minus second
 of = ["MLL", "JAW_MID"]
 
+[[derived]]
+name = "HEAD_CENTROID"   # head movement: centroid of the un-normalized head points
+op = "mean"
+of = ["LBH", "LTH", "RBH", "RTH"]
+space = "lp"             # computed from the preserved (not head-normalized) trajectories
+
 # ---------------------------------------------------------------------------
 # Stage settings
 # ---------------------------------------------------------------------------
@@ -67,10 +73,18 @@ eye_pair = ["RCE", "LCE"]
 # Physical outer-canthal distance. Leave unset for face-relative units (eye distance = 1).
 # Usually per participant: set it in the recording manifest, not here.
 # eye_distance_mm = 100.0
-xy_units = "normalized01"     # pixels | normalized01 | custom
-anchors = "head_anchors"      # group name or list of landmarks
-z_zero_mode = "anchors_mean"
-z_direction = "decrease_toward_camera"
+xy_units = "pixels"           # wckdsmat extract writes pixels; normalized01 only for 0-1 input (needs video size)
+pixel_aspect = 1.0
+scale_mode = "eye_2d"         # eye_2d: published method (image-plane eye distance) | eye_3d: includes depth, unaffected by head turns
+z_scale = "global_median"     # global_median: published (s_z = median s(t)) | per_frame: same s(t) on all axes
+scale_center = "head_centroid" # head_centroid: scale the face about the anchors' centroid, convert head translation
+                               #   with the median scale (no scale jitter in head movement) | image_origin: published;
+                               #   identical head-normalized output, but scale jitter moves the un-normalized head points
+scale_smooth_window_s = 0.2   # running median on the eye distance; 0 = off
+scale_clip = [0.5, 2.0]       # clamp the eye distance to this range around its median; [] = off
+anchors = "head_anchors"      # points whose z sets the z offset
+z_zero_mode = "anchors_mean"  # one global offset (keeps forward/back head motion)
+z_direction = "decrease_toward_camera"   # MediaPipe convention; output z increases toward the camera
 
 [preprocess]
 order = "hn_then_lp"          # hn_then_lp | lp_then_hn

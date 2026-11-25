@@ -16,7 +16,7 @@ def test_speech_preset_loads_and_resolves_groups():
     assert cfg.index_of("MLL") == 17
     assert cfg.resolve("head_anchors")[0] == "RCE"
     assert len(cfg.resolve(cfg.preprocess["anchors"])) >= 3
-    assert [d.name for d in cfg.derived] == ["JAW_MID", "IMLL"]
+    assert [d.name for d in cfg.derived] == ["JAW_MID", "IMLL", "HEAD_CENTROID"]
     assert "position" not in cfg.kinematics["magnitude_3d"]
 
 
@@ -118,3 +118,22 @@ def test_cli_init_then_check(tmp_path, capsys):
     assert main(["config", "check", str(p)]) == 0
     assert main(["config", "init", str(p)]) == 1          # refuses to overwrite
     assert "OK" in capsys.readouterr().out
+
+
+def test_lp_derived_point_needs_preserved_inputs(tmp_path):
+    with pytest.raises(ConfigError, match="preserve_unnormalized"):
+        load_config(write(tmp_path, "[[derived]]\nname = 'LIP_C'\nop = 'mean'\nof = ['MLL', 'MUL']\nspace = 'lp'\n"))
+
+
+def test_interspeech2026_preset_reproduces_paper_settings():
+    cfg = load_config(preset="interspeech2026")
+    assert cfg.preprocess["lowpass_hz"] == 7.125
+    assert cfg.calibrate["scale_mode"] == "eye_2d" and cfg.calibrate["z_scale"] == "global_median"
+    assert cfg.calibrate["scale_smooth_window_s"] == 0 and cfg.calibrate["scale_clip"] == []
+    assert cfg.index_of("MLL") == 17                       # inherited from speech
+    assert cfg.meta["name"] == "interspeech2026"
+
+
+def test_study_file_can_extend_a_derived_preset(tmp_path):
+    cfg = load_config(write(tmp_path, 'preset = "interspeech2026"\n[calibrate]\nscale_mode = "eye_3d"\n'))
+    assert cfg.calibrate["scale_mode"] == "eye_3d" and cfg.preprocess["lowpass_hz"] == 7.125

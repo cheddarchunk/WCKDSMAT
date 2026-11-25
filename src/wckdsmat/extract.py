@@ -65,7 +65,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import get_context
 
 import mediapipe as mp
-from scipy.spatial.transform import Rotation as R
 
 # ----------------------------
 # Configuration and constants *these can be changed here or with input arguments
@@ -89,20 +88,6 @@ speech_indices = list(speech_landmark_map.keys())
 
 # Pairs to swap when --mirror-mode is enabled (speech CSV only)
 MIRROR_PAIRS = [("RTH","LTH"),("RBH","LBH"),("RCL","LCL"),("RJ","LJ"),("RCE","LCE")]
-
-# Model points (in an arbitrary 3D canonical face space, units ~mm)
-# for a rough head-pose estimate via solvePnP. This is not calibrated,
-# but is adequate for relative orientation time-series.
-MODEL_POINTS = np.array([
-    [ -30.0,   0.0,  30.0],  # LCE
-    [  30.0,   0.0,  30.0],  # RCE
-    [   0.0,  20.0,  60.0],  # NT (slightly forward)
-    [ -25.0, -40.0,  20.0],  # LMC
-    [  25.0, -40.0,  20.0],  # RMC
-    [   0.0, -65.0,   0.0],  # Chin
-], dtype=np.float64)
-
-P2D_KEYS = ["LCE", "RCE", "NT", "LMC", "RMC", "MJ"]
 
 mp_face_mesh = mp.solutions.face_mesh
 
@@ -159,31 +144,6 @@ def draw_overlay(frame_bgr: np.ndarray, xyzn: np.ndarray) -> None:
     for i in range(0, 468, 8):
         x, y = int(xyzn[i, 0]), int(xyzn[i, 1])
         cv2.circle(frame_bgr, (x, y), 1, (0, 255, 0), -1)
-
-
-def estimate_head_pose_xyzn(xyzn: np.ndarray, w: int, h: int) -> Tuple[float, float, float]:
-    """Return (yaw, pitch, roll) in degrees using solvePnP on six FaceMesh points.
-    Uses indices [33(LCE), 263(RCE), 1(NT), 61(LCL), 291(RCL), 199(Chin)] to match MODEL_POINTS order.
-    """
-    idx_order = [33, 263, 1, 61, 291, 199]
-    pts_2d = np.array([[float(xyzn[i, 0]), float(xyzn[i, 1])] for i in idx_order], dtype=np.float64)
-
-    focal_length = w
-    center = (w / 2.0, h / 2.0)
-    cam_matrix = np.array([
-        [focal_length, 0, center[0]],
-        [0, focal_length, center[1]],
-        [0, 0, 1]
-    ], dtype=np.float64)
-    dist_coeffs = np.zeros((4, 1))
-
-    ok, rvec, tvec = cv2.solvePnP(MODEL_POINTS, pts_2d, cam_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-    if not ok:
-        return (float("nan"),) * 3
-    rot_mat, _ = cv2.Rodrigues(rvec)
-    euler = R.from_matrix(rot_mat).as_euler('xyz', degrees=True)  # roll, pitch, yaw
-    roll, pitch, yaw = float(euler[0]), float(euler[1]), float(euler[2])
-    return yaw, pitch, roll
 
 
 # ----------------------------
@@ -266,8 +226,7 @@ def process_video(video_path: str, cfg: RunConfig) -> None:
 
             # --- Full landmarks row ---
             # Flatten as [t, x0,y0,z0, x1,y1,z1, ...]
-            yaw, pitch, roll = estimate_head_pose_xyzn(xyzn, width, height)
-            flat = [frame_idx, t, pitch, yaw, roll]
+            flat = [frame_idx, t]
             flat.extend(xyzn.reshape(-1).tolist())
             rows_all.append(flat)
 
@@ -283,7 +242,7 @@ def process_video(video_path: str, cfg: RunConfig) -> None:
         print(f"Writing CSV-only (skipped MP4): {stem}")
 
     # Write CSVs
-    base_cols = ['frame', 'timestamp', 'pitch', 'yaw', 'roll']
+    base_cols = ['frame', 'timestamp']
     lm_cols = [f'lmk_{i}_{axis}' for i in range(468) for axis in ('x','y','z')]
     df_all = pd.DataFrame(rows_all, columns=base_cols + lm_cols)
     df_all.to_csv(out_all_csv, index=False)

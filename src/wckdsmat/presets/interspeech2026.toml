@@ -1,0 +1,36 @@
+# WCKDSMAT preset: reproduce Sanchez et al., "From Lab to Laptop: Validating 3D Speech
+# Kinematics with MediaPipe Face Mesh", Interspeech 2026.
+#
+# Extends the speech preset; only the differences are listed. Values follow the paper
+# (sections 3.3-3.5) and the calibration metadata of the February 2026 runs.
+preset = "speech"
+
+[meta]
+name = "interspeech2026"
+description = "Settings used for the Interspeech 2026 MediaPipe-vs-motion-capture validation"
+
+[calibrate]
+scale_mode = "eye_2d"          # eq. 3: image-plane outer-canthal distance
+z_scale = "global_median"      # s_z = median_t s(t)
+scale_center = "image_origin"  # eq. 1 as published (head-normalized output is the same with head_centroid)
+scale_smooth_window_s = 0      # no smoothing was applied in the published runs
+scale_clip = []                # no clipping in the published runs ([] = off)
+xy_units = "pixels"
+z_direction = "decrease_toward_camera"
+z_zero_mode = "anchors_mean"
+
+[preprocess]
+order = "hn_then_lp"
+anchors = "head_anchors"       # stable set A: forehead anchors, RCE, LCE, NT
+anchor_mode = "fixed"
+ref_frame = 0
+lowpass_hz = 7.125             # matched cutoff at both 30 and 15 fps (section 3.5)
+filter_order = 4
+
+[kinematics]
+derivative = "time"
+displacement_ref = "first_valid"   # displacement relative to segment onset
+magnitude_3d = ["displacement", "velocity", "acceleration"]
+
+[validate]
+reference_fs = 30.0

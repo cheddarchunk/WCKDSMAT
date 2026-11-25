@@ -17,11 +17,13 @@
 - "Displacement" means position minus a reference (the first frame by default), not a copy of position.
 
 ## Pipeline stages (src/wckdsmat/)
-1. `extract` — MediaPipe Face Mesh landmarks from video → `*_gfm_sp.csv`
-2. `calibrate` — Method G (dynXY_eyes3D_ratioZ) → mm space `*_t.csv`
-3. `preprocess` — low-pass + head normalization + mouth residuals → `*_lp_hn*.csv`
-4. `kinematics_imll`, `kinematics_grouped`, `head` — articulator and head time series
-5. `validate/` — CTX (motion capture) vs GFM agreement: traces → Bandini metrics → stage B summaries
+Order is fixed (Interspeech 2026, sections 3.2-3.6):
+1. `extract` — MediaPipe Face Mesh landmarks from video, in pixels → `*_gfm_sp_t.csv`, `*_gfm_all_t.csv`
+2. `calibrate` — Method G → `NAME_t_X` in mm or face units → `*_cal.csv`
+3. `preprocess` — head-normalize, then low-pass the full-length trajectory; derived points → `NAME_hn_X`, `NAME_lp_X` → `*_lp_hn.csv`
+4. task segmentation — segment table (`wckdsmat.segments`); distinct from recording gaps
+5. `kinematics` — per-segment displacement (from segment onset), velocity, acceleration; derivatives never cross a recording gap
+6. `validate/` — CTX (motion capture) vs GFM agreement (not yet config-driven)
 
 `viewer/` is the QC and segmentation reviewer. It is **not yet part of the package**: it moves into `src/` only once it is functional and finished.
 

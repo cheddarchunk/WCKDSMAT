@@ -8,10 +8,11 @@ Webcam-based facial kinematics for speech and oral-motor research.
 
 | Stage | Module | Input → Output |
 |---|---|---|
-| Landmark extraction | `wckdsmat.extract` | video → MediaPipe Face Mesh landmarks |
-| Calibration (Method G) | `wckdsmat.calibrate` | pixel landmarks → mm |
-| Preprocessing | `wckdsmat.preprocess` | low-pass, head normalization, mouth residuals |
-| Kinematics | `wckdsmat.kinematics_imll`, `kinematics_grouped`, `head` | articulator and head-movement time series |
+| 1. Landmark extraction | `wckdsmat.extract` | video → MediaPipe Face Mesh landmarks (pixels) |
+| 2. Calibration (Method G) | `wckdsmat calibrate` | pixels → mm (or face units) |
+| 3. Preprocessing | `wckdsmat preprocess` | head normalization, then low-pass; derived points |
+| 4. Task segmentation | segment table CSV | analysis windows (`recording,segment_id,task,start_s,end_s`) |
+| 5. Kinematics | `wckdsmat kinematics` | per-segment displacement, velocity, acceleration |
 | Validation | `wckdsmat.validate` | agreement with motion capture (CTX) |
 | QC viewer | `viewer/` (in progress) | interactive review and segmentation |
 
@@ -30,6 +31,8 @@ wckdsmat config init my_study.toml      # start from the speech preset
 wckdsmat config check my_study.toml     # report every problem at once
 wckdsmat config show my_study.toml      # print the resolved settings
 ```
+
+Presets: `speech` (default) and `interspeech2026` (reproduces the published validation settings).
 
 ## Signal conventions
 

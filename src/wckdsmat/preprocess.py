@@ -261,12 +261,14 @@ def preprocess(df: pd.DataFrame, cfg: Config, source: str = "") -> tuple[pd.Data
     if order == "hn_then_lp":
         hn = {n: smooth(a) for n, a in hn.items()}
 
+    lp = {name: smooth(raw[name]) for name in preserve if name in raw}
     for d in cfg.derived:
-        if not all(ref in hn for ref in d.of):
+        pool = hn if d.space == "hn" else lp
+        if not all(ref in pool for ref in d.of):
             rep.missing_landmarks.append(d.name)
             continue
-        parts = [hn[ref] for ref in d.of]
-        hn[d.name] = np.mean(parts, axis=0) if d.op == "mean" else parts[0] - parts[1]
+        parts = [pool[ref] for ref in d.of]
+        pool[d.name] = np.mean(parts, axis=0) if d.op == "mean" else parts[0] - parts[1]
 
     seg_id = np.zeros(T, dtype=int)
     for i, (s, e) in enumerate(segments):
@@ -275,11 +277,9 @@ def preprocess(df: pd.DataFrame, cfg: Config, source: str = "") -> tuple[pd.Data
     for name, arr in hn.items():
         for k, a in enumerate(AXES):
             out[column(name, a, "hn")] = arr[:, k]
-    for name in preserve:
-        if name in raw:
-            sm = smooth(raw[name])
-            for k, a in enumerate(AXES):
-                out[column(name, a, "lp")] = sm[:, k]
+    for name, arr in lp.items():
+        for k, a in enumerate(AXES):
+            out[column(name, a, "lp")] = arr[:, k]
 
     rep.settings = {
         "config": cfg.source,

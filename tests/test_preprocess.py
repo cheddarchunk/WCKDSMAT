@@ -184,3 +184,13 @@ def test_cli_preprocess(recording, tmp_path, capsys):
     assert code == 1                                    # one bad file -> nonzero exit, batch still ran
     assert "[ok] SUBJ001_a.csv" in text and "[fail] SUBJ002_a.csv" in text
     assert (tmp_path / "out" / "SUBJ001_a_lp_hn.csv").exists()
+
+
+def test_head_centroid_from_unnormalized_points(cfg, recording):
+    df, _ = recording
+    out, _ = preprocess(df, cfg)
+    pts = ["LBH", "LTH", "RBH", "RTH"]
+    expect = np.mean([out[[f"{p}_lp_{a}" for a in "XYZ"]].to_numpy() for p in pts], axis=0)
+    got = out[["HEAD_CENTROID_lp_X", "HEAD_CENTROID_lp_Y", "HEAD_CENTROID_lp_Z"]].to_numpy()
+    assert np.allclose(got, expect) and np.ptp(got[:, 0]) > 5      # follows head motion
+    assert "HEAD_CENTROID_hn_X" not in out

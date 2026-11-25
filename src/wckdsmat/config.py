@@ -38,7 +38,8 @@ _SCHEMA: dict[str, set[str]] = {
     "meta": {"name", "description", "side_convention"},
     "extract": {"refine_landmarks", "include_iris", "min_detection_confidence",
                 "min_tracking_confidence", "mirror", "save_all_landmarks", "write_overlay_video"},
-    "calibrate": {"eye_pair", "eye_distance_mm", "xy_units", "anchors", "z_zero_mode", "z_direction"},
+    "calibrate": {"eye_pair", "eye_distance_mm", "xy_units", "pixel_aspect", "scale_mode", "z_scale", "scale_center",
+                  "scale_smooth_window_s", "scale_clip", "anchors", "z_zero_mode", "z_direction"},
     "preprocess": {"order", "anchors", "anchor_mode", "min_anchors", "ref_frame", "ref_search_s",
                    "lowpass_hz", "nyquist_cap", "filter_order", "preserve_unnormalized",
                    "gap_split_factor", "max_interp_gap_frames"},
@@ -61,6 +62,7 @@ class Derived:
     name: str
     op: str                  # "mean" | "difference"
     of: tuple[str, ...]
+    space: str = "hn"        # "hn": from head-normalized points | "lp": from un-normalized (preserved) points
 
 
 @dataclass(frozen=True)
@@ -119,6 +121,17 @@ def preset_text(name: str) -> str:
     return resources.files("wckdsmat.presets").joinpath(f"{name}.toml").read_text()
 
 
+def _preset_dict(name: str, _seen: tuple[str, ...] = ()) -> dict:
+    """A preset's settings, layered over the preset it extends (``preset = "..."``)."""
+    if name == "none":
+        return {}
+    if name in _seen:
+        raise ConfigError([f"preset cycle: {' -> '.join((*_seen, name))}"])
+    raw = tomllib.loads(preset_text(name))
+    parent = raw.pop("preset", None)
+    return _merge(_preset_dict(parent, (*_seen, name)), raw) if parent else raw
+
+
 def _merge(base: dict, over: dict) -> dict:
     out = copy.deepcopy(base)
     for k, v in over.items():
@@ -141,7 +154,7 @@ def load_config(path: str | Path | None = None, *, preset: str | None = None,
         with open(path, "rb") as fh:
             user = tomllib.load(fh)
     base_name = preset or user.get("preset", "speech")
-    base = {} if base_name == "none" else tomllib.loads(preset_text(base_name))
+    base = _preset_dict(base_name)
     raw = _merge(base, user)
     if overrides:
         raw = _merge(raw, overrides)
@@ -185,7 +198,13 @@ def _build(raw: dict, source: str) -> Config:
     known = set(landmarks)
     for i, d in enumerate(raw.get("derived", [])):
         name, op, of = d.get("name"), d.get("op"), tuple(d.get("of", ()))
+        space = d.get("space", "hn")
         label = name or f"derived[{i}]"
+        if space not in ("hn", "lp"):
+            problems.append(f"{label}: space must be 'hn' or 'lp', got {space!r}")
+        for k in d:
+            if k not in ("name", "op", "of", "space"):
+                problems.append(f"{label}: unknown key {k!r}")
         if not name or not NAME_RE.match(name):
             problems.append(f"{label}: name must be UPPER_CASE")
         elif name in known:
@@ -201,7 +220,7 @@ def _build(raw: dict, source: str) -> Config:
                 problems.append(f"{label}: unknown point {ref!r}")
         if name:
             known.add(name)
-            derived.append(Derived(name, op, of))
+            derived.append(Derived(name, op, of, space))
 
     # groups
     groups_raw = dict(raw.get("groups", {}))
@@ -265,7 +284,18 @@ def _build(raw: dict, source: str) -> Config:
     if "anchors" in cal:
         resolve(cal["anchors"], "[calibrate] anchors", minimum=3)
     positive("calibrate", "eye_distance_mm")
-    choice("calibrate", "xy_units", ("pixels", "normalized01", "custom"))
+    choice("calibrate", "xy_units", ("pixels", "normalized01"))
+    choice("calibrate", "scale_mode", ("eye_2d", "eye_3d"))
+    choice("calibrate", "z_scale", ("global_median", "per_frame"))
+    choice("calibrate", "scale_center", ("head_centroid", "image_origin"))
+    choice("calibrate", "z_zero_mode", ("anchors_mean", "anchors_max", "anchors_min",
+                                         "global_mean", "global_max", "global_min", "none"))
+    positive("calibrate", "pixel_aspect")
+    positive("calibrate", "scale_smooth_window_s", allow_zero=True)
+    sc = cal.get("scale_clip")
+    if sc not in (None, []) and not (isinstance(sc, list) and len(sc) == 2
+                               and all(isinstance(v, (int, float)) for v in sc) and 0 < sc[0] < 1 < sc[1]):
+        problems.append(f"[calibrate] scale_clip = {sc!r}: must be [low, high] with 0 < low < 1 < high, or [] for off")
     choice("calibrate", "z_direction", ("decrease_toward_camera", "increase_toward_camera"))
 
     # preprocess
@@ -275,6 +305,15 @@ def _build(raw: dict, source: str) -> Config:
         resolve(pre["anchors"], "[preprocess] anchors", minimum=3)
     if "preserve_unnormalized" in pre:
         resolve(pre["preserve_unnormalized"], "[preprocess] preserve_unnormalized")
+    if "preserve_unnormalized" in pre and not problems:
+        kept = set(groups.get(pre["preserve_unnormalized"], (pre["preserve_unnormalized"],))
+                   if isinstance(pre["preserve_unnormalized"], str) else pre["preserve_unnormalized"])
+        lp_names = {d.name for d in derived if d.space == "lp"}
+        for d in derived:
+            if d.space == "lp":
+                bad = [r for r in d.of if r not in kept and r not in lp_names]
+                if bad:
+                    problems.append(f"{d.name}: space 'lp' needs {bad} in preprocess.preserve_unnormalized")
     positive("preprocess", "ref_frame", integer=True, allow_zero=True)
     positive("preprocess", "lowpass_hz")
     positive("preprocess", "filter_order", integer=True)

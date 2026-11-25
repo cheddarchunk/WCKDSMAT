@@ -90,9 +90,98 @@ def _preprocess(args) -> int:
     return 1 if failed else 0
 
 
+def _expand(patterns) -> list[Path]:
+    return sorted({Path(p) for pattern in patterns for p in (glob.glob(pattern) or [pattern]) if Path(p).is_file()})
+
+
+def _run_each(paths, label, fn) -> int:
+    """Run fn(path) -> one-line note for each file; report failures and keep going."""
+    if not paths:
+        print("no input files matched", file=sys.stderr)
+        return 1
+    print(f"{label}: {len(paths)} file(s)")
+    failed = 0
+    for path in paths:
+        try:
+            note = fn(path)
+            print(f"  [ok] {path.name}" + (f"  ({note})" if note else ""))
+        except Exception as e:  # noqa: BLE001 - report and continue the batch
+            failed += 1
+            print(f"  [fail] {path.name}: {type(e).__name__}: {e}")
+    print(f"done: {len(paths) - failed} ok, {failed} failed")
+    return 1 if failed else 0
+
+
+def _calibrate(args) -> int:
+    import pandas as pd
+
+    from .calibrate import process_file
+    from .segments import value_for_recording
+    try:
+        cfg = load_config(args.config)
+    except ConfigError as e:
+        print(e, file=sys.stderr)
+        return 1
+    eye_table = pd.read_csv(args.eye_table) if args.eye_table else None
+    size = tuple(int(v) for v in args.video_size.lower().split("x")) if args.video_size else None
+
+    def one(path):
+        eye = args.eye_mm
+        if eye_table is not None:
+            eye = value_for_recording(eye_table, path.name, "eye_distance_mm")
+            if eye is None and not args.allow_face_units:
+                raise ValueError("not listed in --eye-table (use --allow-face-units to calibrate in face units)")
+        rep = process_file(path, args.out_dir, cfg, eye_distance_mm=eye, video_size=size)
+        lo, hi = rep.scale_p5_p95
+        return f"{rep.units}, {rep.scale_mode}, scale p5-p95 = {lo / rep.median_scale_per_px:.2f}-{hi / rep.median_scale_per_px:.2f} x median"
+
+    return _run_each(_expand(args.inputs), f"calibrate -> {args.out_dir}", one)
+
+
+def _kinematics(args) -> int:
+    from .kinematics import process_file
+    from .segments import load_segments
+    try:
+        cfg = load_config(args.config)
+        segs = load_segments(args.segments) if args.segments else None
+    except (ConfigError, ValueError) as e:
+        print(e, file=sys.stderr)
+        return 1
+
+    def one(path):
+        rep = process_file(path, args.out_dir, cfg, segs)
+        notes = [f"{rep.n_segments} segment(s)"]
+        if rep.empty_segments:
+            notes.append(f"{len(rep.empty_segments)} empty")
+        if rep.segments_crossing_gaps:
+            notes.append(f"{len(rep.segments_crossing_gaps)} span a recording gap")
+        return ", ".join(notes)
+
+    return _run_each(_expand(args.inputs), f"kinematics -> {args.out_dir}", one)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wckdsmat")
     sub = ap.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("calibrate", help="convert extracted landmarks to mm (or face units)")
+    p.add_argument("inputs", nargs="+", help="CSV files or glob patterns (*_gfm_sp_t.csv or *_gfm_all_t.csv)")
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--config", help="config TOML (default: speech preset)")
+    eye = p.add_mutually_exclusive_group()
+    eye.add_argument("--eye-mm", type=float, help="outer-canthal distance in mm, applied to every input")
+    eye.add_argument("--eye-table", help="CSV with recording,eye_distance_mm (one row per participant/recording)")
+    p.add_argument("--allow-face-units", action="store_true", help="with --eye-table: face units for unlisted files")
+    p.add_argument("--video-size", help="WxH, only for xy_units = normalized01")
+    p.set_defaults(func=_calibrate)
+
+    p = sub.add_parser("kinematics", help="per-segment displacement, velocity, acceleration")
+    p.add_argument("inputs", nargs="+", help="preprocess outputs (*_lp_hn.csv)")
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--config", help="config TOML (default: speech preset)")
+    p.add_argument("--segments", help="segment table CSV (recording,segment_id,task,start_s,end_s); "
+                                      "omit to treat each continuous piece as one segment")
+    p.set_defaults(func=_kinematics)
 
     p = sub.add_parser("preprocess", help="head-normalize and low-pass calibrated landmark CSVs")
     p.add_argument("inputs", nargs="+", help="CSV files or glob patterns")
