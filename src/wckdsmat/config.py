@@ -45,7 +45,9 @@ _SCHEMA: dict[str, set[str]] = {
                    "lowpass_hz", "nyquist_cap", "filter_order", "preserve_unnormalized",
                    "gap_split_factor", "max_interp_gap_frames"},
     "kinematics": {"derivative", "displacement_ref", "products", "magnitude_3d"},
-    "validate": {"reference_fs", "max_lag_ms", "fit"},
+    "validate": {"reference_fs", "max_lag_ms", "fit", "bases", "min_valid_frames", "lag_fs",
+                 "range_percentiles", "range_floor_mm", "rom_floor_mm", "speed_floor_mm_s",
+                 "spectral_max_lag_ms", "summary_landmarks", "max_reference_fill"},
 }
 _TOP_LEVEL = {"preset", "landmarks", "groups", "derived", *_SCHEMA}
 
@@ -353,7 +355,21 @@ def _build(raw: dict, source: str) -> Config:
     # validate
     positive("validate", "reference_fs")
     positive("validate", "max_lag_ms", allow_zero=True)
-    choice("validate", "fit", ("rigid",))   # only rigid is implemented (validate/spatial_alignment.py)
+    choice("validate", "fit", ("rigid",))   # only rigid is implemented (validate/pairing.py)
+    val = raw.get("validate", {})
+    if "bases" in val:
+        resolve(val["bases"], "[validate] bases", minimum=3)
+    if "summary_landmarks" in val:
+        resolve(val["summary_landmarks"], "[validate] summary_landmarks")
+    lf = val.get("lag_fs")
+    if lf is not None and lf != "measured" and not (isinstance(lf, (int, float)) and lf > 0):
+        problems.append(f"[validate] lag_fs = {lf!r}: must be 'measured' or a positive number")
+    for k in ("range_floor_mm", "rom_floor_mm", "speed_floor_mm_s", "spectral_max_lag_ms"):
+        positive("validate", k, allow_zero=True)
+    positive("validate", "min_valid_frames", integer=True)
+    mrf = val.get("max_reference_fill")
+    if mrf is not None and not (isinstance(mrf, (int, float)) and 0 <= mrf <= 1):
+        problems.append(f"[validate] max_reference_fill = {mrf!r}: must be between 0 and 1")
 
     if problems:
         raise ConfigError(problems)

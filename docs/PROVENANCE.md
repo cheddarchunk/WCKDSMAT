@@ -10,12 +10,12 @@ Each file was copied from the original research folder `ValidationPipeline_VES/W
 | ~~`src/wckdsmat/kinematics_imll.py`~~ (removed; replaced by `kinematics.py`) | `WCKDSMAT/batch_gfm_imll_timeseries_case_insensitive.py` | `c0014e9fd1` | 2026-06-30 |
 | ~~`src/wckdsmat/kinematics_grouped.py`~~ (removed; replaced by `kinematics.py`) | `POLO_R/batch_gfm_kinematic_timeseries_grouped_v5_3d.py` | `9c51c88a90` | 2026-09-07 |
 | ~~`src/wckdsmat/head.py`~~ (removed; `HEAD_CENTROID` derived point + `kinematics.py`) | `POLO_R/batch_head_centroid_from_lp.py` | `3fad569135` | 2026-05-20 |
-| `src/wckdsmat/validate/traces.py` | `pipeline/validation/validation_pipeline_STEP1.py` | `b59800091e` | 2026-02-18 |
-| `src/wckdsmat/validate/bandini.py` | `pipeline/validation/bandini_full_pipeline_STEP2.py` | `1e2d34bb38` | 2026-02-18 |
-| `src/wckdsmat/validate/stage_b.py` | `pipeline/validation/batch_stage_b_pipeline_STEP3.py` | `a6ba09f538` | 2026-02-18 |
+| ~~`src/wckdsmat/validate/traces.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/validation_pipeline_STEP1.py` | `b59800091e` | 2026-02-18 |
+| ~~`src/wckdsmat/validate/bandini.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/bandini_full_pipeline_STEP2.py` | `1e2d34bb38` | 2026-02-18 |
+| ~~`src/wckdsmat/validate/stage_b.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/batch_stage_b_pipeline_STEP3.py` | `a6ba09f538` | 2026-02-18 |
 | `viewer/reviewer.py` | `WCKDSMAT/wckdsmat_batch_reviewer.py` | `28d1b49cd4` | 2026-07-01 |
 | `viewer/qc_displacement.py` | `WCKDSMAT/qc_lip_jaw_displacement_viewer_for_batch_outputs.py` | `a1f36a83b2` | 2026-07-01 |
-| `src/wckdsmat/validate/spatial_alignment.py` | `pipeline/validation/spatial_alignment.py` | `2c748f09a1` | 2026-02-17 |
+| ~~`src/wckdsmat/validate/spatial_alignment.py`~~ (removed; replaced by `validate/pairing.py`, `metrics.py`, `run.py`) | `pipeline/validation/spatial_alignment.py` | `2c748f09a1` | 2026-02-17 |
 | `docs/fix_log.md` | `pipeline/validation/pipeline_fix_log.md` | `0ee191f924` | 2026-02-18 |
 
 ## Open decisions (alternatives that were *not* copied)
@@ -79,3 +79,20 @@ extract → calibrate → preprocess (head-normalize, then low-pass the full-len
 - **The old validation outputs used `--mirror-mode`**, which detects on the mirrored frame and then flips x. MediaPipe's indices then sit on the opposite side of the face. The old speech file swapped the pair names, but the eye pair was already mislabeled, so in that file the subject's right eye was called `LCE`. The old all-landmarks file kept the opposite-side indices.
 - **Two mirror methods.** `flip_frame` (new default) flips before detection, so indices are anatomically correct in both files. `flip_coordinates` is the published method; it relabels the named file through `mirror_pairs`, and flags the all-landmarks file so calibrate refuses to read lateral points from it by index. On a real 30 fps validation video the two methods recovered all 14 known left-right pairs but differ by 1.1-1.7 mm SD per landmark, because MediaPipe is not exactly symmetric. Which is closer to motion capture is an open validation question.
 - **Regression check** (`interspeech2026` settings vs old outputs, 2 videos at 30 fps + 1 at 15 fps from `flats`): all-landmarks and named files match to 3e-5 px, with the eye labels corrected.
+
+## Validation rebuild (2026-11-25)
+
+`wckdsmat validate` replaces `replay_segmentation.py`, `spatial_alignment.py`, `validation_pipeline_STEP1.py`, `bandini_full_pipeline_STEP2.py`, `batch_stage_b_pipeline_STEP3.py`, `temporal_validation.py` and the ROM95/Speed95 step of `batch_bytask_pipeline.py`. It is one function per step, configured by `[validate]`.
+
+**Reference run.** The published 30 fps results are `pipeline/validation/data/022226_lp_test/lp7125_30fps_FINAL`, with inputs `data/hn_lp/022226_lp_test/lp_7.125_30fps/{gfm,ctx}`.
+
+- **Step-by-step check (116 segments, 22,272 metric rows).** Alignment matches to 3e-13 mm; it uses the 7 head anchors, identified by refitting candidate sets. Every error and range metric matches to 1e-11. Correlations also match to 1e-11, except velocity correlations on traces whose reference is mostly straight-line fill, where both old and new values are rounding noise on a constant signal.
+- **End-to-end check** (whole recordings + segmentation logs, `--preset interspeech2026`): 116 segments, **3D position uRMSE 2.030 ± 0.589 mm** (paper 2.03 ± 0.59), and every Fig. 2 landmark value. 12 segments fail, as in the original: one eye-corner marker is missing from the whole CTX recording (two recordings of one participant).
+- **Case-insensitive filename collision.** For one participant, NSM segments `Xmax1`/`Xmax2` were written over `xmax1`/`xmax2` on macOS, so the published `xmax` segments are the `Xmax` windows. The segment table drops the stray lowercase rows to reproduce that.
+- **Secondary measures were aggregated outside the scripts** (Excel pivots), so the package reports its own documented definitions:
+  - Normalized displacement error reproduces as **6.33 ± 1.28%** (6 landmarks, per participant); the paper prints 6.63 ± 1.28, likely a typo.
+  - Normalized speed error, velocity peak correlation and lag, and spectral centroid differences were not reproduced exactly.
+- **Lag sampling rate.** The old stage B never passed the sampling rate to the metrics step, so lags assumed 30 Hz. 15 fps lags (ms) are therefore halved and the lag window doubled. `lag_fs = "measured"` is the default; `interspeech2026` keeps 30.
+- **Straight-line fill in the motion-capture reference.** 151 of 812 speech-landmark traces (19%), in 24 of the 116 segments, are more than 50% exact straight-line samples (runs of 5 or more), which is consistent with linear gap filling of marker dropouts.
+  - Every metric row now carries `ref_fill_frac`, and `max_reference_fill` drops such traces from summaries.
+  - Excluding traces more than 50% filled gives 1.92 ± 0.74 mm and a velocity peak correlation of 0.66 (published: 2.03 mm, 0.59), so the published accuracy is conservative.

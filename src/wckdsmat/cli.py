@@ -179,6 +179,29 @@ def _kinematics(args) -> int:
     return _run_each(_expand(args.inputs), f"kinematics -> {args.out_dir}", one)
 
 
+def _validate(args) -> int:
+    import pandas as pd
+
+    from .validate import validate_many, write_outputs
+    try:
+        cfg = load_config(args.config, preset=None if args.config else args.preset)
+        table = pd.read_csv(args.segments)
+    except (ConfigError, ValueError, OSError) as e:
+        print(e, file=sys.stderr)
+        return 1
+    print(f"validate: {len(table)} segment(s), config {cfg.source}")
+    rows, spectral, failures = validate_many(table, Path(args.gfm_dir), Path(args.ctx_dir), cfg)
+    if rows.empty:
+        print("no segment could be scored", file=sys.stderr)
+        return 1
+    headline, per_lm = write_outputs(Path(args.out_dir), rows, spectral, failures, cfg)
+    n = rows[["recording", "segment_id"]].drop_duplicates().shape[0]
+    print(f"scored {n} segment(s), {len(failures)} failed -> {args.out_dir}")
+    for _, r in headline.iterrows():
+        print(f"  {r['measure']:<48} {r['mean']:8.3f} ± {r['sd']:.3f}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="wckdsmat")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -201,6 +224,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-face-units", action="store_true", help="with --eye-table: face units for unlisted files")
     p.add_argument("--video-size", help="WxH, only for xy_units = normalized01")
     p.set_defaults(func=_calibrate)
+
+    p = sub.add_parser("validate", help="agreement with motion capture, per segment and summarized")
+    p.add_argument("--segments", required=True,
+                   help="CSV: recording,segment_id,start_s,end_s,ctx_offset_s[,task,subject,ctx_recording]")
+    p.add_argument("--gfm-dir", required=True, help="folder with the webcam recordings (whole, preprocessed)")
+    p.add_argument("--ctx-dir", required=True, help="folder with the motion-capture recordings (whole, preprocessed)")
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--config", help="config TOML")
+    p.add_argument("--preset", default="speech", help="preset when no --config is given (e.g. interspeech2026)")
+    p.set_defaults(func=_validate)
 
     p = sub.add_parser("kinematics", help="per-segment displacement, velocity, acceleration")
     p.add_argument("inputs", nargs="+", help="preprocess outputs (*_lp_hn.csv)")

@@ -23,7 +23,7 @@ Order is fixed (Interspeech 2026, sections 3.2-3.6):
 3. `preprocess` — head-normalize, then low-pass the full-length trajectory; derived points → `NAME_hn_X`, `NAME_lp_X` → `*_lp_hn.csv`
 4. task segmentation — segment table (`wckdsmat.segments`); distinct from recording gaps
 5. `kinematics` — per-segment displacement (from segment onset), velocity, acceleration; derivatives never cross a recording gap
-6. `validate/` — CTX (motion capture) vs GFM agreement (not yet config-driven)
+6. `validate` — motion capture (CTX) vs webcam: cut with CTX offset → resample CTX to webcam frames → one rigid fit on the head anchors → traces → metrics → ROM95/Speed95 normalization → summary. Must keep reproducing 2.030 ± 0.589 mm with `interspeech2026` (see docs/PROVENANCE.md).
 
 `viewer/` is the QC and segmentation reviewer. It is **not yet part of the package**: it moves into `src/` only once it is functional and finished.
 

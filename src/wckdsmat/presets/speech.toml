@@ -36,6 +36,7 @@ head_anchors = ["RCE", "LCE", "RTH", "LTH", "RBH", "LBH", "NT"]  # rigid head fo
 head_motion  = ["LBH", "LTH", "RBH", "RTH"]                       # kept un-normalized for head-movement work
 lips         = ["MUL", "MLL", "RCL", "LCL"]
 jaw          = ["RJ", "MJ", "LJ"]
+speech_landmarks = ["LCL", "RCL", "MUL", "MLL", "MJ", "LJ", "RJ"]   # the 7 landmarks summarized in the paper
 
 mirror_pairs = [["RCE", "LCE"], ["RTH", "LTH"], ["RBH", "LBH"], ["RCL", "LCL"], ["RJ", "LJ"]]
 
@@ -113,5 +114,16 @@ magnitude_3d = ["displacement", "velocity", "acceleration"]
 
 [validate]
 reference_fs = 30.0
-max_lag_ms = 500.0
-fit = "rigid"
+fit = "rigid"                   # one rigid transform motion capture -> webcam per segment
+bases = "head_anchors"          # landmarks the transform is fitted on
+min_valid_frames = 5
+max_lag_ms = 500.0              # peak cross-correlation search window
+lag_fs = "measured"             # sampling rate for lags: "measured", or a number (the published runs assumed 30)
+range_percentiles = [5.0, 95.0]
+range_floor_mm = 0.5            # reference range below this: range agreement not computed
+rom_floor_mm = 2.0              # ROM95 below this: normalized displacement error not computed
+speed_floor_mm_s = 2.0
+spectral_max_lag_ms = 250.0
+summary_landmarks = "speech_landmarks"
+max_reference_fill = 1.0        # summaries skip traces whose motion-capture reference is more than this share
+                                # straight-line gap fill (every row reports ref_fill_frac); 1.0 = keep all

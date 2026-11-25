@@ -38,3 +38,6 @@ magnitude_3d = ["displacement", "velocity", "acceleration"]
 
 [validate]
 reference_fs = 30.0
+bases = "head_anchors"         # the 7 head anchors (identified from the FINAL run's aligned outputs)
+lag_fs = 30.0                  # the published runs converted lags assuming 30 Hz at both frame rates
+max_reference_fill = 1.0       # the published summary kept every trace
