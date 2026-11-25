@@ -1,0 +1,30 @@
+# Provenance
+
+Each file was copied from the original research folder `ValidationPipeline_VES/WCKDSMAT/` on 2026-11-25. The only change was replacing study paths and participant IDs in the usage examples with placeholders. The md5 is the hash of the original source file.
+
+| Package file | Copied from | Source md5 | Source modified |
+|---|---|---|---|
+| `src/wckdsmat/extract.py` | `pipeline/gfm_vesbatch_lm_sp.py` | `0e3d3cc54d` | 2026-03-28 |
+| `src/wckdsmat/calibrate.py` | `pipeline/gfm_cal_final_ves.py` | `6bcee2df8b` | 2025-12-19 |
+| `src/wckdsmat/preprocess.py` | `pipeline/ves_gfm_lp_hn_om.py` | `624bcfcddb` | 2026-04-30 |
+| `src/wckdsmat/kinematics_imll.py` | `WCKDSMAT/batch_gfm_imll_timeseries_case_insensitive.py` | `c0014e9fd1` | 2026-06-30 |
+| `src/wckdsmat/kinematics_grouped.py` | `POLO_R/batch_gfm_kinematic_timeseries_grouped_v5_3d.py` | `9c51c88a90` | 2026-09-07 |
+| `src/wckdsmat/head.py` | `POLO_R/batch_head_centroid_from_lp.py` | `3fad569135` | 2026-05-20 |
+| `src/wckdsmat/validate/traces.py` | `pipeline/validation/validation_pipeline_STEP1.py` | `b59800091e` | 2026-02-18 |
+| `src/wckdsmat/validate/bandini.py` | `pipeline/validation/bandini_full_pipeline_STEP2.py` | `1e2d34bb38` | 2026-02-18 |
+| `src/wckdsmat/validate/stage_b.py` | `pipeline/validation/batch_stage_b_pipeline_STEP3.py` | `a6ba09f538` | 2026-02-18 |
+| `viewer/reviewer.py` | `WCKDSMAT/wckdsmat_batch_reviewer.py` | `28d1b49cd4` | 2026-07-01 |
+| `viewer/qc_displacement.py` | `WCKDSMAT/qc_lip_jaw_displacement_viewer_for_batch_outputs.py` | `a1f36a83b2` | 2026-07-01 |
+| `docs/fix_log.md` | `pipeline/validation/pipeline_fix_log.md` | `0ee191f924` | 2026-02-18 |
+
+## Open decisions (alternatives that were *not* copied)
+
+| Stage | Chosen | Alternative to reconcile | Difference |
+|---|---|---|---|
+| calibrate | `pipeline/gfm_cal_final_ves.py` | `POLO_R/polor_gfm_cal_final_ves.py` | 8 lines |
+| preprocess | `pipeline/ves_gfm_lp_hn_om.py` (single file) | `POLO_R/polor_batch_lp_hn_ves_preserve_head.py`, `polor_batch_lp_hn_ves.py`, `pipeline/pp_gfm_batch_lp_hn.py` | batch variants; preserve_head differs by 81 lines |
+| kinematics | both IMLL and grouped_v5_3d copied | grouped v1–v4 | possibly overlapping functionality |
+| validate/traces | `validation_pipeline_STEP1.py` (fix log Step 1) | `validation_pipeline.py`, `_GOOD30HZ`, `_15hz`, `_128`, `_129`, `_og` | STEP1 is the corrected version per the fix log |
+| validate (Bland–Altman) | not copied yet | `pipeline/residual_error_ba.py`, `validation/ba_plots.py` | — |
+| calibrate batch wrapper | not copied yet | `POLO_R/gfm_cal_batch_ves.py`, `batch_calibrate_faceunits.py` | — |
+| viewer | `wckdsmat_batch_reviewer.py` (newest, 2026-07-01) | ~20 `wckdsmat_*`/`segtool_*`/`ves_seg_*` variants, incl. a Qt version | needs a feature inventory before it counts as finished |

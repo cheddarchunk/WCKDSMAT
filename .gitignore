@@ -1,0 +1,33 @@
+# ---- PARTICIPANT DATA: never commit ----
+# Media (faces/voices are identifiable)
+*.mov
+*.mp4
+*.avi
+*.mkv
+*.wav
+*.m4a
+*.mp3
+*.c3d
+# Data and outputs: only synthetic fixtures under tests/fixtures/ may be committed
+data/
+outputs/
+results/
+*.csv
+*.xlsx
+*.npz
+*.zip
+!tests/fixtures/**/*.csv
+
+# ---- Python / tooling ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
