@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wckdsmat"
-version = "0.1.0.dev0"
+dynamic = ["version"]   # read from src/wckdsmat/__init__.py
 description = "Webcam-based facial kinematics for speech and oral-motor research: landmark extraction, calibration to mm, head normalization, articulator kinematics, and validation against motion capture."
 readme = "README.md"
 requires-python = ">=3.11"   # tomllib
@@ -27,6 +27,9 @@ video = ["mediapipe==0.10.21"]   # extract; the validated MediaPipe version (bri
 viewer = ["dash>=2.17,<5", "plotly>=5.20"]   # Speech Movement Data Viewer (audio via ffmpeg on PATH)
 dev = ["pytest", "ruff"]
 all = ["wckdsmat[video,viewer]"]
+
+[tool.hatch.version]
+path = "src/wckdsmat/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wckdsmat"]

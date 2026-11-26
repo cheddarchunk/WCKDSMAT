@@ -59,3 +59,17 @@ def test_demo_walkthrough(tmp_path, capsys):
     from wckdsmat.config import load_config
     s = Session(rec, load_config(), audio=d / "DEMO_ddk.wav", out_dir=d / "ann")
     assert s.rec.name == "DEMO_ddk" and s.sr == 16000 and abs(s.audio_offset - 1 / 30) < 1e-9
+
+
+def test_version_is_consistent_everywhere(capsys):
+    import pytest
+
+    import wckdsmat
+    v = wckdsmat.__version__
+    cff = (ROOT / "CITATION.cff").read_text()
+    assert f"\nversion: {v}\n" in cff, "CITATION.cff version differs from wckdsmat.__version__"
+    assert f"## {v} " in (ROOT / "CHANGELOG.md").read_text(), "CHANGELOG.md has no section for this version"
+    assert 'dynamic = ["version"]' in (ROOT / "pyproject.toml").read_text()
+    with pytest.raises(SystemExit):
+        main(["--version"])
+    assert capsys.readouterr().out.strip() == f"wckdsmat {v}"

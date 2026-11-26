@@ -88,4 +88,4 @@ GitHub's **Cite this repository** button (from [CITATION.cff](CITATION.cff)) giv
 
 WCKDSMAT is free software under the [GNU Affero General Public License v3.0 or later](LICENSE) (`AGPL-3.0-or-later`). You may use, study, modify and share it. If you distribute a modified version, **or run one as a network service** (for example a hosted analysis platform or the viewer), you must make its source available under the same license, so improvements stay open.
 
-*Status: pre-release (0.1.0). Interfaces may still change before 1.0.*
+*Version 1.0.0. Releases follow [semantic versioning](https://semver.org): 1.x releases keep the commands, config keys and file formats compatible. See [CHANGELOG.md](CHANGELOG.md).*

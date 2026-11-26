@@ -224,7 +224,10 @@ def _view(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="wckdsmat")
+    from . import __version__
+    ap = argparse.ArgumentParser(prog="wckdsmat",
+                                 description="Webcam-based facial kinematics for speech and oral-motor research.")
+    ap.add_argument("--version", action="version", version=f"wckdsmat {__version__}")
     sub = ap.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("extract", help="MediaPipe Face Mesh landmarks from videos (pixels)")
